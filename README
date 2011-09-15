@@ -10,7 +10,9 @@ This tool backup your toodledo tasks into the local DB.
 Requirement
 -------------
 
-- Python 2.6 or later
+- Python 2.7 or later
+
+  - If you install `argparse`, you can run under Python 2.6
 
 config
 -----------
@@ -20,10 +22,10 @@ config
 cron
 -------------
 
-You may this tool run via cron like this.
+You can set cron to run this tool.
 
 ::
 
-  30 21 * * * * python /path/to/toodlebackup.py /path/to/conf.ini
+  30 21 * * * * python /path/to/toodlebackup.py -c /path/to/conf.ini
 
 

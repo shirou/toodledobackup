@@ -1,0 +1,6 @@
+*~
+*.pyc
+*.sqlite
+*.ini
+*.log
+

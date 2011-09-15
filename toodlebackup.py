@@ -9,6 +9,7 @@ import os
 import json
 
 import sqlite3
+import argparse
 
 DEFAULT_FIELDS = ["id", "modified", "title", "completed"]
 VALID_FIELDS = ["tag", "folder", "context", "goal",
@@ -28,6 +29,10 @@ create table tasks (
 """
 
 def dump(config):
+    """
+    Dump task backup
+    """
+    
     logdb = config.get('LOG', 'logdb')
     # this time, not checked
     fields = config.get('TASKS','fields').split(",")
@@ -39,7 +44,7 @@ def dump(config):
     conn = sqlite3.connect(logdb)
     c = conn.cursor()
 
-    c.execute("SELECT id, modified, json FROM tasks")
+    c.execute("SELECT id, modified, json FROM tasks ORDER BY modified")
     tasks = c.fetchall()
     for task in tasks:
         j = json.loads(task[2])
@@ -57,6 +62,9 @@ def append(config, tasks):
     fields = config.get('TASKS','fields').split(",")
     fields = DEFAULT_FIELDS + fields
 
+    logfile = config.get('LOG', 'logfile')
+    logfd = open(logfile, "a")
+    
     firstTime = False
     if not os.path.exists(logdb):
         firstTime = True
@@ -82,24 +90,26 @@ def append(config, tasks):
         cur.execute(q)
         ret = cur.fetchone()
         if not ret:
-            print _id, _modified
             s = json.dumps(task)
             insert_query += """INSERT INTO tasks VALUES
             ({0}, {1},'{2}');\n""".format(_id, _modified, s)
+
+            datestr = str(datetime.datetime.fromtimestamp(_modified))
+            logfd.write("Add: id={0} modified={1}".format(_id, datestr));
 
     if insert_query:
         with conn:
             conn.executescript(insert_query)
 
     conn.close()
+    logfd.close()
     
 def auth(config, cli):
     email = config.get('USER','email')
     password = config.get('USER','password')
 
     key = cli.authenticate(email, password)
-    #key ="b97068324fba89a6caa7f3f23b9263bf"
-    
+
     return key
 
 def check_fields(fields):
@@ -121,12 +131,19 @@ def getTasks(config, cli, key):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print "specify config file path."
-        print "ex: " + sys.argv[0] + " <config file path>"
-        exit(1)
-        
-    conf = sys.argv[1]
+
+    parser = argparse.ArgumentParser(description='Toodledo task backup tool')
+    parser.add_argument('-c', '--config',
+                        required=True,
+                        help='config file path')
+    parser.add_argument('command',
+                        nargs='?',
+                        help='command (default: log)',
+                        default='log')
+
+    args = parser.parse_args()
+
+    conf = args.config
     
     config = ConfigParser.RawConfigParser()
     config.read(conf)
@@ -138,5 +155,8 @@ if __name__ == '__main__':
 
     key = auth(config, cli)
     tasks = getTasks(config, cli, key)
-    append(config, tasks)
-#    dump(config)
+
+    if args.command == 'log':
+        append(config, tasks)
+    else:
+        dump(config)
