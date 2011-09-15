@@ -1,0 +1,22 @@
+[USER]
+email=email@example.jp
+password=mostimportant
+
+[TASKS]
+fields=folder,added,note,duedate,status
+
+# valiables: comma separeted.
+# tag,folder,context,goal,location,parent,children,
+# order,duedate,duedatemod,startdate,
+# duetime,starttime,remind,repeat,
+# repeatfrom,status,length,star,
+# added,timer,timeron,note,meta
+# 
+
+[LOG]
+logdb=/path/to/backup.sqlite
+keyfile=not_used
+
+[APP]
+APPID=YourAppID
+APPTOKEN=YourAPPToken
