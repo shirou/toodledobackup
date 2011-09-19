@@ -158,14 +158,13 @@ def getTasks(config, cli, key):
 
 
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser(description='Toodledo task backup tool')
     parser.add_argument('-c', '--config',
                         required=True,
                         help='config file path')
     parser.add_argument('command',
                         nargs='?',
-                        help='command (default: log)',
+                        help='command (default: backup)',
                         default='log')
 
     args = parser.parse_args()
@@ -183,7 +182,7 @@ if __name__ == '__main__':
     key = auth(config, cli)
     tasks = getTasks(config, cli, key)
 
-    if args.command == 'log':
+    if args.command == 'backup':
         append(config, tasks)
     else:
         dump(config)
