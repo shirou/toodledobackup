@@ -30,12 +30,12 @@ create table tasks (
 
 def dump(config):
     """
-    Dump task backup
+    Dump from task backup db
     """
     
     logdb = config.get('LOG', 'logdb')
-    # this time, not checked
     fields = config.get('TASKS','fields').split(",")
+    check_fields(fields)
     fields = DEFAULT_FIELDS + fields
 
     if not os.path.exists(logdb):
@@ -46,19 +46,34 @@ def dump(config):
 
     c.execute("SELECT id, modified, json FROM tasks ORDER BY modified")
     tasks = c.fetchall()
+    print ",".join(fields) # print header
     for task in tasks:
         j = json.loads(task[2])
 
+        # convert UNIX timestamp to ISO 8801 format 
         for f in TIME_FIELDS:
             if f in j.keys():
                 time = int(j[f])
                 if time != 0:
                     j[f] = str(datetime.datetime.fromtimestamp(time))
-        print j
+                    
+        data = []
+        for f in fields:
+            tmp = j[f]
+            if isinstance(tmp, basestring):
+                data.append('"' + tmp + '"')
+            else:
+                data.append('"' + str(tmp) + '"')
+                
+        print ",".join(data)
 
 def append(config, tasks):
+    """
+    insert task to DB
+    """
+    
     logdb = config.get('LOG', 'logdb')
-    # this time, not checked
+    # this time, not checked    
     fields = config.get('TASKS','fields').split(",")
     fields = DEFAULT_FIELDS + fields
 
@@ -105,6 +120,10 @@ def append(config, tasks):
     logfd.close()
     
 def auth(config, cli):
+    """
+    Authentication to the toodledo 
+    """
+    
     email = config.get('USER','email')
     password = config.get('USER','password')
 
@@ -113,12 +132,20 @@ def auth(config, cli):
     return key
 
 def check_fields(fields):
+    """
+    check user input fields are valid or not.
+    """
+    
     diff = set(fields).difference(VALID_FIELDS + DEFAULT_FIELDS)
     
     if len(diff) > 0:
         print(", ".join(diff) + " is(are) not valid fields name.")
 
 def getTasks(config, cli, key):
+    """
+    get task list from toodledo.
+    """
+    
     fields = config.get('TASKS','fields').split(",")
     check_fields(fields)
 
