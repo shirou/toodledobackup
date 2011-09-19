@@ -178,15 +178,15 @@ if __name__ == '__main__':
     config = ConfigParser.RawConfigParser()
     config.read(conf)
 
-    appid = config.get('APP','APPID')
-    apptoken = config.get('APP','APPTOKEN')
-    cli = ApiClient(application_id=appid,
-                    app_token=apptoken)
-
-    key = auth(config, cli)
-    tasks = getTasks(config, cli, key)
-
     if args.command == 'backup':
+        appid = config.get('APP','APPID')
+        apptoken = config.get('APP','APPTOKEN')
+        cli = ApiClient(application_id=appid,
+                        app_token=apptoken)
+
+        key = auth(config, cli)
+        tasks = getTasks(config, cli, key)
+
         append(config, tasks)
     else:
         dump(config)
