@@ -36,6 +36,7 @@ config
 -----------
 
 - [USER]
+
   - email: write your email address which uses in Toodledo.
   - password: your password.
 
