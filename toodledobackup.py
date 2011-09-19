@@ -77,8 +77,10 @@ def append(config, tasks):
     fields = config.get('TASKS','fields').split(",")
     fields = DEFAULT_FIELDS + fields
 
-    logfile = config.get('LOG', 'logfile')
-    logfd = open(logfile, "a")
+    logfd = None
+    if config.has_option('LOG', 'logfile'):
+        logfile = config.get('LOG', 'logfile')
+        logfd = open(logfile, "a")
     
     firstTime = False
     if not os.path.exists(logdb):
@@ -110,14 +112,16 @@ def append(config, tasks):
             ({0}, {1},'{2}');\n""".format(_id, _modified, s)
 
             datestr = str(datetime.datetime.fromtimestamp(_modified))
-            logfd.write("Add: id={0} modified={1}".format(_id, datestr));
+            if logfd:
+                logfd.write("Add: id={0} modified={1}".format(_id, datestr));
 
     if insert_query:
         with conn:
             conn.executescript(insert_query)
 
     conn.close()
-    logfd.close()
+    if logfd:
+        logfd.close()
     
 def auth(config, cli):
     """
