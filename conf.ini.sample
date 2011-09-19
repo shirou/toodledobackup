@@ -16,6 +16,7 @@ fields=folder,added,note,duedate,status
 [LOG]
 logdb=/path/to/backup.sqlite
 keyfile=not_used
+logfile=/path/to/backup.log
 
 [APP]
 APPID=YourAppID
