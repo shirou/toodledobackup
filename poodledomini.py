@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# 
+#
 # http://api.toodledo.com/2/index.php
 #
 
@@ -18,7 +18,6 @@ except ImportError:
     from md5 import md5
 
 
-
 def check_api_key(f):
     ''' A decorator that makes the decorated function check for a API key'''
     def fn(*args, **kwargs):
@@ -32,8 +31,10 @@ def check_api_key(f):
                 kwargs['key'] = self.key
                 return f(*args, **kwargs)
             else:
-                raise PoodledoError('need API key to call function %s' % f.__name__)
+                raise PoodledoError('need API key to call function %s'
+                                    % f.__name__)
     return fn
+
 
 class ApiClient(object):
     ''' Toodledo API client'''
@@ -41,7 +42,9 @@ class ApiClient(object):
     _SERVICE_URL_SSL = 'http://api.toodledo.com/2/'
 
     def __init__(self, key=None, application_id=None, app_token=None):
-        ''' Initializes a new ApiClient w/o auth credentials'''
+        '''
+            Initializes a new ApiClient w/o auth credentials
+        '''
         self._urlopener = urllib2.build_opener()
 
         if application_id and app_token:
@@ -50,8 +53,10 @@ class ApiClient(object):
         else:
             raise KeyError("App ID and App token are required.")
 
-    def _create_url(self,**kwargs):
-        ''' Creates a request url by appending key-value pairs to the SERVICE_URL'''
+    def _create_url(self, **kwargs):
+        '''
+            Creates a request url by appending key-value pairs to the SERVICE_URL
+        '''
 
         if "scheme" in kwargs and "https" in kwargs["scheme"]:
             url = ApiClient._SERVICE_URL_SSL
@@ -65,25 +70,25 @@ class ApiClient(object):
         if "passwd" in kwargs:
             kwargs["pass"] = kwargs["passwd"]
             del(kwargs["passwd"])
-        
+
         # add args to url (key1=value1;key2=value2)
         # trailing underscores are stripped from keys to allow keys like pass_
         url += ';'.join(key.rstrip('_') + '=' + urllib2.quote(str(kwargs[key])) for key in sorted(kwargs))
         return url
 
-    def _call(self, **kwargs):            
+    def _call(self, **kwargs):
         url = self._create_url(**kwargs)
         stream = self._urlopener.open(url)
         return json.loads(stream.read())
 
     def authenticate(self, email, passwd):
-        ''' 
+        '''
             Uses credentials to get userid, token and auth key.
 
-            Returns the auth key, which can be cached and used later in the constructor in 
+            Returns the auth key, which can be cached and used later in the constructor in
             order to skip authenticate()
         '''
-        
+
         self.userid = self.getUserid(email, passwd)
 
         self.signature = md5(self.userid + self.app_token).hexdigest()
@@ -97,8 +102,10 @@ class ApiClient(object):
         return bool(self.key is not None)
 
     def _generateKey(self, app_token, session_token, passwd):
-        ''' Generates a key as specified in the API docs'''
-        return md5(md5(passwd).hexdigest() + app_token + session_token ).hexdigest()
+        '''
+           Generates a key as specified in the API docs
+        '''
+        return md5(md5(passwd).hexdigest() + app_token + session_token).hexdigest()
 
     def getToken(self, sig, userid):
         ret = self._call(path='account/token.php?',
@@ -109,14 +116,14 @@ class ApiClient(object):
 
         if 'errorCode' in ret:
             raise Exception(ret['errorDesc'])
-        
+
         token = ret['token']
         if token == '1':
             raise Exception('could not get token.')
         return token
-    
+
     def getUserid(self, email, passwd):
-        sig = md5(email+self.app_token).hexdigest()
+        sig = md5(email + self.app_token).hexdigest()
 
         userid = self._call(path='account/lookup.php?',
                             email=email,
@@ -125,7 +132,7 @@ class ApiClient(object):
                             scheme="https")['userid']
         if userid == '1':
             raise KeyError('invalid username/password')
-        return userid 
+        return userid
 
     @check_api_key
     def getTasks(self, key=None, **kwargs):
