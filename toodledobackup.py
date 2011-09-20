@@ -60,9 +60,11 @@ def dump(config):
 
         data = []
         for f in fields:
+            if f not in j:
+                continue
             tmp = j[f]
             if isinstance(tmp, basestring):
-                data.append('"' + tmp + '"')
+                data.append('"' + tmp.encode('utf-8') + '"')
             else:
                 data.append('"' + str(tmp) + '"')
 
