@@ -60,8 +60,8 @@ def dump(config):
 
         data = []
         for f in fields:
-            if f not in j:
-                continue
+            if f not in j:  # fields is added later
+                j[f] = ''
             tmp = j[f]
             if isinstance(tmp, basestring):
                 data.append('"' + tmp.encode('utf-8') + '"')
@@ -96,32 +96,25 @@ def append(config, tasks):
         conn.execute(SCHEMA)
         conn.commit()
 
-    insert_query = ""
     for task in tasks:
         if "total" in task:
             continue
         _id = task['id']
         _modified = task['modified']
 
-        q = """SELECT * FROM tasks
-        WHERE id = {0} AND
-        modified = {1}""".format(_id, _modified)
+        q = "SELECT * FROM tasks WHERE id = ? AND modified = ?"
 
         cur = conn.cursor()
-        cur.execute(q)
+        cur.execute(q, (_id, _modified))
         ret = cur.fetchone()
         if not ret:
             s = json.dumps(task)
-            insert_query += """INSERT INTO tasks VALUES
-            ({0}, {1},'{2}');\n""".format(_id, _modified, s)
+            insert_query = "INSERT INTO tasks VALUES (?, ?, ?);"
+            conn.execute(insert_query, (_id, _modified, s))
 
             datestr = str(datetime.datetime.fromtimestamp(_modified))
             if logfd:
                 logfd.write("Add: id={0} modified={1}".format(_id, datestr))
-
-    if insert_query:
-        with conn:
-            conn.executescript(insert_query)
 
     conn.close()
     if logfd:
